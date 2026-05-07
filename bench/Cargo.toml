@@ -18,6 +18,10 @@ path = "src/bin/sqlite.rs"
 name = "bench-compare"
 path = "src/bin/compare.rs"
 
+[[bin]]
+name = "bench-session"
+path = "src/bin/session.rs"
+
 [dependencies]
 wwise_format = { path = "../format" }
 wwise_storage = { path = "../storage" }
