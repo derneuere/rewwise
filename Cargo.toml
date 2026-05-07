@@ -4,6 +4,7 @@ members = [
     "format",
     "analysis",
     "storage",
+    "editor",
 ]
 
 [workspace.package]
