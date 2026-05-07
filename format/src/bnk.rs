@@ -129,7 +129,7 @@ pub struct ObsOccCurve {
     pub points: Vec<AkRTPCGraphPoint>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct AkRTPCGraphPoint {
     pub from: f32,
@@ -261,6 +261,18 @@ pub struct HIRCSection {
     pub objects: Vec<HIRCObject>,
 }
 
+impl HIRCSection {
+    /// Construct a HIRC section from an existing object list. The internal
+    /// `object_count` is set up-front; `prepare_export` will refresh it from
+    /// `objects.len()` regardless when the section is serialized.
+    pub fn from_objects(objects: Vec<HIRCObject>) -> Self {
+        Self {
+            object_count: objects.len() as u32,
+            objects,
+        }
+    }
+}
+
 #[deku_derive(DekuRead, DekuWrite)]
 #[derive(Debug, Serialize, Deserialize)]
 #[deku(ctx = "size: u32")]
@@ -386,6 +398,20 @@ pub struct HIRCObject {
     pub body: HIRCObjectBody,
 }
 
+impl HIRCObject {
+    /// Construct a new HIRC object. The `body_type` discriminator is taken
+    /// from `body`'s deku id and `size` is left at 0; both fields are
+    /// recomputed by `prepare_export()` before serialization.
+    pub fn new(id: ObjectId, body: HIRCObjectBody) -> Self {
+        Self {
+            body_type: body.deku_id().unwrap_or(0),
+            size: 0,
+            id,
+            body,
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 #[deku(ctx = "body_type: u8, size: u32", id = "body_type")]
@@ -436,10 +462,11 @@ pub enum HIRCObjectBody {
     TimeModulator(CAkTimeModulator),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 #[deku(type = "u8")]
 pub enum AkPropID {
+    #[default]
     #[deku(id = "0x00")]
     Volume,
     #[deku(id = "0x01")]
@@ -723,7 +750,7 @@ pub enum AkParameterID {
 }
 
 // Incomplete but I best enable them when I have examples to work off of
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 #[deku(ctx = "action_type: u16", id = "action_type")]
 pub enum CAkActionParams {
@@ -872,6 +899,7 @@ pub enum CAkActionParams {
     // #[deku(id="0x1F03")] ReleaseO,
     #[deku(id = "0x2102")]
     Unk2102,
+    #[default]
     #[deku(id = "0x2103")]
     PlayEvent,
 }
@@ -937,10 +965,11 @@ pub enum Ak3DSpatializationMode {
     PositionAndOrientation,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 #[deku(type = "u8", bits = "3")]
 pub enum AkSpeakerPanningType {
+    #[default]
     #[deku(id = "0x0")]
     DirectSpeakerAssignment,
     #[deku(id = "0x1")]
@@ -949,10 +978,11 @@ pub enum AkSpeakerPanningType {
     SteeringPanner,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 #[deku(type = "u8", bits = "2")]
 pub enum Ak3DPositionType {
+    #[default]
     #[deku(id = "0x0")]
     Emitter,
     #[deku(id = "0x1")]
@@ -961,10 +991,11 @@ pub enum Ak3DPositionType {
     ListenerWithAutomation,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 #[deku(type = "u8")]
 pub enum AkVirtualQueueBehavior {
+    #[default]
     #[deku(id = "0x0")]
     PlayFromBeginning,
     #[deku(id = "0x1")]
@@ -973,10 +1004,11 @@ pub enum AkVirtualQueueBehavior {
     Resume,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 #[deku(type = "u8")]
 pub enum AkBelowThresholdBehavior {
+    #[default]
     #[deku(id = "0x0")]
     ContinueToPlay,
     #[deku(id = "0x1")]
@@ -1013,10 +1045,11 @@ pub enum AkSyncType {
     LastExitPosition,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 #[deku(type = "u8")]
 pub enum AkSyncTypeU8 {
+    #[default]
     #[deku(id = "0x0")]
     Immediate,
     #[deku(id = "0x1")]
@@ -1039,10 +1072,11 @@ pub enum AkSyncTypeU8 {
     LastExitPosition,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 #[deku(type = "u8")]
 pub enum AkRtpcAccum {
+    #[default]
     #[deku(id = "0x0")]
     None,
     #[deku(id = "0x1")]
@@ -1059,10 +1093,11 @@ pub enum AkRtpcAccum {
     Filter,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 #[deku(type = "u8")]
 pub enum AkRtpcType {
+    #[default]
     #[deku(id = "0x0")]
     GameParameter,
     #[deku(id = "0x1")]
@@ -1071,10 +1106,11 @@ pub enum AkRtpcType {
     Modulator,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 #[deku(type = "u8")]
 pub enum AkCurveScaling {
+    #[default]
     #[deku(id = "0x0")]
     None,
     #[deku(id = "0x2")]
@@ -1718,7 +1754,7 @@ pub struct BusInitialFxParams {
     pub is_share_set_0: u8,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct FXChunk {
     pub fx_index: u8,
@@ -1727,7 +1763,7 @@ pub struct FXChunk {
     pub is_rendered: u8,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct CAkAction {
     pub action_type: u16,
@@ -1815,7 +1851,7 @@ pub struct CAkActionParamsSeek {
     pub snap_to_nearest_marker: u8,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct CAkActionPlay {
     pub fade_curve: u8,
@@ -1836,21 +1872,21 @@ pub struct CAkActionParamsPause {
     pub flags: u8,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct CAkActionStop {
     pub stop: CAkActionParamsStop,
     pub except: CAkActionParamsExcept,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct CAkActionParamsStop {
     flags1: u8,
     flags2: u8,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct CAkActionParamsExcept {
     #[deku(update = "self.exceptions.len()")]
@@ -1859,7 +1895,7 @@ pub struct CAkActionParamsExcept {
     pub exceptions: Vec<CAkActionParamsExceptEntry>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct CAkActionParamsExceptEntry {
     pub object_id: u32,
@@ -1946,11 +1982,23 @@ pub struct AkSwitchNodeParams {
     pub fade_in_time: i32,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct CAkActorMixer {
     pub node_base_params: NodeBaseParams,
     pub children: Children,
+}
+
+impl CAkActorMixer {
+    pub fn new(direct_parent_id: u32, children: Vec<u32>) -> Self {
+        Self {
+            node_base_params: NodeBaseParams {
+                direct_parent_id,
+                ..Default::default()
+            },
+            children: Children::from_items(children),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1988,7 +2036,7 @@ pub struct CAssociatedChildData {
     pub graph_points: Vec<AkRTPCGraphPoint>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct CAkRanSeqCntr {
     pub node_base_params: NodeBaseParams,
@@ -2007,7 +2055,23 @@ pub struct CAkRanSeqCntr {
     pub playlist: CAkPlaylist,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+impl CAkRanSeqCntr {
+    /// Construct a minimal random-sequence container with the given parent
+    /// id and child list. All other fields default to zero — fine for the
+    /// kind of synthetic banks `viewer/examples/smoke.rs` creates.
+    pub fn new(direct_parent_id: u32, children: Vec<u32>) -> Self {
+        Self {
+            node_base_params: NodeBaseParams {
+                direct_parent_id,
+                ..Default::default()
+            },
+            children: Children::from_items(children),
+            ..Default::default()
+        }
+    }
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct Children {
     #[deku(update = "self.items.len()")]
@@ -2016,7 +2080,15 @@ pub struct Children {
     pub items: Vec<u32>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+impl Children {
+    /// Build a `Children` list from raw FNV ids. The internal `count` is
+    /// pre-set; `prepare_export` will refresh it from `items.len()` anyway.
+    pub fn from_items(items: Vec<u32>) -> Self {
+        Self { count: items.len() as u32, items }
+    }
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct CAkPlaylist {
     #[deku(update = "self.items.len()")]
@@ -2025,7 +2097,7 @@ pub struct CAkPlaylist {
     items: Vec<CAkPlaylistItem>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct CAkPlaylistItem {
     play_id: u32,
@@ -2077,7 +2149,7 @@ pub struct CAkConversionTable {
     pub points: Vec<AkRTPCGraphPoint>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct CAkEvent {
     #[deku(update = "self.actions.len()")]
@@ -2086,14 +2158,51 @@ pub struct CAkEvent {
     pub actions: Vec<u32>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+impl CAkEvent {
+    pub fn from_actions(actions: Vec<u32>) -> Self {
+        Self { action_count: actions.len() as u8, actions }
+    }
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct CAkSound {
     pub bank_source_data: AkBankSourceData,
     pub node_base_params: NodeBaseParams,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+impl CAkSound {
+    /// Construct a minimal embedded-PCM sound rooted at `direct_parent_id`.
+    /// `source_id` is the FNV id of the WEM payload.
+    pub fn new(direct_parent_id: u32, source_id: u32) -> Self {
+        Self {
+            bank_source_data: AkBankSourceData::embedded_pcm(source_id),
+            node_base_params: NodeBaseParams {
+                direct_parent_id,
+                ..Default::default()
+            },
+        }
+    }
+}
+
+impl AkBankSourceData {
+    /// Empty PCM-embedded source pointing at `source_id`. Used by the smoke
+    /// fixture; real banks set the plugin and params from the .wem header.
+    pub fn embedded_pcm(source_id: u32) -> Self {
+        Self {
+            plugin: PluginId::PCM,
+            source_type: SourceType::Embedded,
+            media_information: AkMediaInformation {
+                source_id,
+                ..Default::default()
+            },
+            params_size: 0,
+            params: Vec::new(),
+        }
+    }
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct AkBankSourceData {
     pub plugin: PluginId,
@@ -2106,10 +2215,11 @@ pub struct AkBankSourceData {
     pub params: Vec<u8>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 #[deku(type = "u8")]
 pub enum SourceType {
+    #[default]
     #[deku(id = "0x0")]
     Embedded,
     #[deku(id = "0x1")]
@@ -2118,10 +2228,11 @@ pub enum SourceType {
     Streaming,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 #[deku(type = "u32")]
 pub enum PluginId {
+    #[default]
     #[deku(id = "0x00000000")]
     None,
     #[deku(id = "0x00000001")]
@@ -2328,7 +2439,7 @@ impl PluginId {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct AkMediaInformation {
     pub source_id: u32,
@@ -2336,7 +2447,7 @@ pub struct AkMediaInformation {
     pub source_flags: u8,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct NodeBaseParams {
     pub node_initial_fx_parameters: NodeInitialFxParams,
@@ -2352,7 +2463,7 @@ pub struct NodeBaseParams {
     pub initial_rtpc: InitialRTPC,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct NodeInitialFxParams {
     pub is_override_parent_fx: u8,
@@ -2364,7 +2475,7 @@ pub struct NodeInitialFxParams {
     pub fx_chunks: Vec<FXChunk>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct NodeInitialParams {
     #[deku(
@@ -2949,7 +3060,7 @@ impl PropBundle {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct PropRangedModifiers {
     #[deku(update = "self.entries.len()")]
@@ -2958,7 +3069,7 @@ pub struct PropRangedModifiers {
     pub entries: Vec<PropRangedModifier>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct PropRangedModifier {
     pub prop_type: u8,
@@ -2966,7 +3077,7 @@ pub struct PropRangedModifier {
     pub max: f32,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct PositioningParams {
     #[deku(bits = "1")]
@@ -3032,7 +3143,7 @@ pub struct PositioningParams {
     pub three_dimensional_automation_params: Vec<Ak3DAutomationParams>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct AkPathVertex {
     pub x: f32,
@@ -3041,14 +3152,14 @@ pub struct AkPathVertex {
     pub duration: i32,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct AkPathListItemOffset {
     pub vertices_offset: u32,
     pub vertices_count: u32,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct Ak3DAutomationParams {
     pub range_x: f32,
@@ -3056,7 +3167,7 @@ pub struct Ak3DAutomationParams {
     pub range_z: f32,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct AuxParams {
     #[deku(bits = 1)]
@@ -3084,7 +3195,7 @@ pub struct AuxParams {
     pub reflections_aux_bus: u32,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct AdvSettingsParams {
     #[deku(bits = "1")]
@@ -3124,7 +3235,7 @@ pub struct AdvSettingsParams {
     pub override_hdr_envelope: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct StateChunk {
     #[deku(update = "self.state_property_info.len()")]
@@ -3137,7 +3248,7 @@ pub struct StateChunk {
     pub state_group_chunks: Vec<AkStateGroupChunk>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct AkStatePropertyInfo {
     pub property: AkPropID,
@@ -3145,7 +3256,7 @@ pub struct AkStatePropertyInfo {
     pub in_db: u8,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct AkStateGroupChunk {
     pub state_group_id: u32,
@@ -3156,14 +3267,14 @@ pub struct AkStateGroupChunk {
     pub states: Vec<AkState>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct AkState {
     pub state_id: u32,
     pub state_instance_id: u32,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct InitialRTPC {
     #[deku(update = "self.rtpcs.len()")]
@@ -3172,7 +3283,7 @@ pub struct InitialRTPC {
     pub rtpcs: Vec<RTPC>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[deku_derive(DekuRead, DekuWrite)]
 pub struct RTPC {
     pub id: u32,
