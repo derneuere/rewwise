@@ -1,0 +1,29 @@
+[package]
+name = "bench"
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+license.workspace = true
+readme = false
+
+[[bin]]
+name = "bench-jort"
+path = "src/bin/jort.rs"
+
+[[bin]]
+name = "bench-sqlite"
+path = "src/bin/sqlite.rs"
+
+[[bin]]
+name = "bench-compare"
+path = "src/bin/compare.rs"
+
+[dependencies]
+wwise_format = { path = "../format" }
+wwise_storage = { path = "../storage" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+clap = { workspace = true }
+anyhow = { workspace = true }
+deku = "0.16"
+rusqlite = { workspace = true }

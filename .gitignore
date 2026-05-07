@@ -3,3 +3,9 @@ samples/
 /.claude/
 /smoke.db
 /smoke.db-*
+/smoke-large.*
+/smoke-jort*.bnk
+/smoke-jort*.json
+/smoke-sqlite*.bnk
+/smoke-cache.*
+
