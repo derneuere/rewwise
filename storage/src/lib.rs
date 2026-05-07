@@ -219,6 +219,7 @@ pub fn read_soundbank(db_path: &Path) -> Result<Soundbank> {
             magic: string_to_magic(&magic),
             size: 0,
             body,
+            cached_body: None,
         });
     }
 
@@ -265,6 +266,7 @@ fn load_hirc_section(conn: &Connection, section_ord: usize) -> Result<HIRCSectio
                 size: 0,
                 id,
                 body,
+                cached_body: None,
             })
         })
         .collect::<Result<Vec<_>>>()?;
@@ -471,6 +473,7 @@ fn rebuild_didx_data(soundbank: &mut Soundbank, mut wems: Vec<(u32, Vec<u8>)>) -
             magic: [0; 4],
             size: 0,
             body: SectionBody::DIDX(didx),
+            cached_body: None,
         },
     );
     soundbank.sections.insert(
@@ -479,6 +482,7 @@ fn rebuild_didx_data(soundbank: &mut Soundbank, mut wems: Vec<(u32, Vec<u8>)>) -
             magic: [0; 4],
             size: 0,
             body: SectionBody::DATA(data_section),
+            cached_body: None,
         },
     );
 

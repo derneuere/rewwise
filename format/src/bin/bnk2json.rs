@@ -236,6 +236,7 @@ fn handle_dir(path: path::PathBuf) {
             magic: [0x0; 4],
             size: 0,
             body: SectionBody::DATA(data),
+            cached_body: None,
         });
         sections.rotate_right(1);
 
@@ -244,6 +245,7 @@ fn handle_dir(path: path::PathBuf) {
             magic: [0x0; 4],
             size: 0,
             body: SectionBody::DIDX(didx),
+            cached_body: None,
         });
         sections.rotate_right(1);
 

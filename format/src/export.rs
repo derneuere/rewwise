@@ -110,10 +110,26 @@ impl PrepareExport for Section {
             SectionBody::PLAT(s) => de(s.update()),
         }?;
 
-        self.size = sample_section_body_size(self)
-            .map_err(PrepareExportError::Deku)?;
-
         self.update().map_err(PrepareExportError::Deku)?;
+
+        // The HIRC body is huge but its bytes are simply the concatenation
+        // of each child object's already-cached bytes. Streaming those
+        // straight into the final output during `Section::write` is faster
+        // than first encoding the whole HIRC into a `Vec<u8>` we'd discard
+        // once the size is read. So: encode-once for everything except
+        // HIRC, and leave HIRC to compute its size from its children.
+        match &self.body {
+            SectionBody::HIRC(h) => {
+                self.size = hirc_section_size(h);
+                self.cached_body = None;
+            }
+            _ => {
+                let bytes = encode_section_body(self)
+                    .map_err(PrepareExportError::Deku)?;
+                self.size = bytes.len() as u32;
+                self.cached_body = Some(bytes);
+            }
+        }
 
         Ok(())
     }
@@ -156,13 +172,27 @@ impl PrepareExport for INITSection {
     }
 }
 
-fn sample_section_body_size(s: &Section) -> Result<u32, deku::DekuError> {
-    // Encode the body once
+/// Encode a section body into a byte buffer once, so the final
+/// `Soundbank::write` can blit those bytes straight into the output and
+/// avoid a redundant Deku traversal of the whole tree.
+fn encode_section_body(s: &Section) -> Result<Vec<u8>, deku::DekuError> {
     let mut buffer = BitVec::default();
     s.body.write(&mut buffer, (s.magic, 0x100))?;
+    Ok(buffer.into_vec())
+}
 
-    // Get the encoded body length and add the header size
-    Ok(buffer.as_raw_slice().len() as u32)
+/// Size of a fully-prepared HIRC section in bytes. Equals the 4-byte
+/// object_count plus the sum of each child's on-disk size. The on-disk
+/// shape of one HIRCObject is `body_type (1) + size_field (4) + id (4) +
+/// body`. `HIRCObject::prepare_export` already computes the value that
+/// would be written into `size_field` as `id (4) + body_bytes.len()`, so
+/// the full on-disk size per object is `5 + obj.size`.
+fn hirc_section_size(h: &HIRCSection) -> u32 {
+    let mut total: u32 = 4;
+    for obj in &h.objects {
+        total = total.saturating_add(5 + obj.size);
+    }
+    total
 }
 
 impl PrepareExport for HIRCSection {
@@ -208,22 +238,24 @@ impl PrepareExport for HIRCObject {
             HIRCObjectBody::TimeModulator(o) => o.prepare_export(),
         }?;
 
-        self.size = sample_hirc_body_size(self)
-            .map_err(PrepareExportError::Deku)?;
-
         self.update().map_err(PrepareExportError::Deku)?;
+
+        // Encode the body once; cache the bytes so `DekuWrite::write` can
+        // blit them straight into the final output buffer instead of
+        // recursively walking the body again.
+        let bytes = encode_hirc_body(self).map_err(PrepareExportError::Deku)?;
+        // The on-disk `size` field stores `id (4) + body bytes`.
+        self.size = (bytes.len() as u32).saturating_add(4);
+        self.cached_body = Some(bytes);
 
         Ok(())
     }
 }
 
-fn sample_hirc_body_size(s: &mut HIRCObject) -> Result<u32, deku::DekuError> {
-    // Encode the body once
+fn encode_hirc_body(s: &HIRCObject) -> Result<Vec<u8>, deku::DekuError> {
     let mut buffer = BitVec::default();
     s.body.write(&mut buffer, (s.body_type, 0x100))?;
-
-    // Get the encoded body length and add the header size
-    Ok(buffer.as_raw_slice().len() as u32 + 4)
+    Ok(buffer.into_vec())
 }
 
 impl PrepareExport for CAkSound {
