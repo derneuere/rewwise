@@ -25,6 +25,9 @@ pub const APPLICATION_ID: i32 = 0x52455755u32 as i32;
 
 const SCHEMA_SQL: &str = include_str!("schema.sql");
 
+mod session;
+pub use session::{ExportPhases, HircEdits, SoundbankSession};
+
 #[derive(thiserror::Error, Debug)]
 pub enum StorageError {
     #[error(transparent)]
@@ -53,7 +56,7 @@ pub type Result<T> = std::result::Result<T, StorageError>;
 // Connection helpers
 // ---------------------------------------------------------------------------
 
-fn open_rw(path: &Path) -> Result<Connection> {
+pub(crate) fn open_rw(path: &Path) -> Result<Connection> {
     let conn = Connection::open(path)?;
     conn.pragma_update(None, "journal_mode", "WAL")?;
     conn.pragma_update(None, "foreign_keys", "ON")?;
@@ -419,7 +422,7 @@ pub fn rebuild_didx_data_for_bench(
 }
 
 /// Mirrors the descriptor/data assembly in `format/src/bin/bnk2json.rs`.
-fn rebuild_didx_data(soundbank: &mut Soundbank, mut wems: Vec<(u32, Vec<u8>)>) -> Result<()> {
+pub(crate) fn rebuild_didx_data(soundbank: &mut Soundbank, mut wems: Vec<(u32, Vec<u8>)>) -> Result<()> {
     let wem_alignment = soundbank
         .sections
         .iter()
@@ -616,7 +619,7 @@ pub fn list_children_of(db_path: &Path, parent_id: u32) -> Result<Vec<ObjectSumm
 // Helpers
 // ---------------------------------------------------------------------------
 
-fn body_kind_name(body: &HIRCObjectBody) -> &'static str {
+pub(crate) fn body_kind_name(body: &HIRCObjectBody) -> &'static str {
     use HIRCObjectBody::*;
     match body {
         State(_) => "State",
@@ -644,7 +647,7 @@ fn body_kind_name(body: &HIRCObjectBody) -> &'static str {
     }
 }
 
-fn extract_routing(body: &HIRCObjectBody) -> (Option<u32>, Option<u32>) {
+pub(crate) fn extract_routing(body: &HIRCObjectBody) -> (Option<u32>, Option<u32>) {
     use HIRCObjectBody::*;
     match body {
         Sound(b) => (
