@@ -7,5 +7,6 @@ samples/
 /smoke-jort*.bnk
 /smoke-jort*.json
 /smoke-sqlite*.bnk
-/smoke-cache.*
+/smoke-session*.bnk
+/smoke-cache*
 
