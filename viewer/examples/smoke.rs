@@ -279,11 +279,13 @@ fn assemble(objects: Vec<HIRCObject>) -> Soundbank {
                     project_id: 0,
                     padding: Vec::new(),
                 }),
+                cached_body: None,
             },
             Section {
                 magic: *b"HIRC",
                 size: 0,
                 body: SectionBody::HIRC(HIRCSection::from_objects(objects)),
+                cached_body: None,
             },
         ],
     }

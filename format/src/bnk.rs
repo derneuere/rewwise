@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 use std::ffi;
 use std::num::Wrapping;
 
-use deku::bitvec::{BitSlice, BitVec, Msb0};
+use deku::bitvec::{BitSlice, BitVec, BitView, Msb0};
 use deku::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -66,13 +66,47 @@ pub struct Soundbank {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[deku_derive(DekuRead, DekuWrite)]
+#[deku_derive(DekuRead)]
 pub struct Section {
     #[deku(update = "self.body.deku_id().unwrap()")]
     pub magic: [u8; 4],
     pub size: u32,
     #[deku(ctx = "*magic, *size")]
     pub body: SectionBody,
+
+    /// Bytes of the encoded body, captured during `prepare_export`. When
+    /// present, `DekuWrite::write` short-circuits and emits magic + size +
+    /// these bytes directly, avoiding a redundant body re-encode. New
+    /// constructions should set this to `None`; `prepare_export` will
+    /// populate it (and `prepare_export` clears it for the HIRC section,
+    /// where the bytes are streamed in from each child's own cache).
+    #[deku(skip, default = "None")]
+    #[serde(skip, default)]
+    pub cached_body: Option<Vec<u8>>,
+}
+
+// Manual DekuWrite that uses the cached body bytes when available, otherwise
+// re-encodes the body the same way the derived impl would.
+impl DekuWrite<()> for Section {
+    fn write(&self, output: &mut BitVec<u8, Msb0>, _: ()) -> Result<(), DekuError> {
+        self.magic.write(output, ())?;
+        self.size.write(output, ())?;
+        if let Some(bytes) = &self.cached_body {
+            output.extend_from_bitslice(bytes.view_bits::<Msb0>());
+            Ok(())
+        } else {
+            self.body.write(output, (self.magic, self.size))
+        }
+    }
+}
+
+// Manual DekuUpdate equivalent to the one the derive macro would produce.
+impl DekuUpdate for Section {
+    fn update(&mut self) -> Result<(), DekuError> {
+        self.magic = self.body.deku_id().unwrap();
+        self.body.update()?;
+        Ok(())
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -382,7 +416,7 @@ pub struct STIDSection {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[deku_derive(DekuRead, DekuWrite)]
+#[deku_derive(DekuRead)]
 pub struct HIRCObject {
     #[deku(update = "self.body.deku_id().unwrap()")]
     pub body_type: u8,
@@ -396,6 +430,15 @@ pub struct HIRCObject {
 
     #[deku(ctx = "*body_type, *size")]
     pub body: HIRCObjectBody,
+
+    /// Bytes of the encoded body (everything after the 4-byte ObjectId),
+    /// captured during `prepare_export`. When present, `DekuWrite::write`
+    /// emits header + id + these bytes directly, avoiding a redundant body
+    /// re-encode. New constructions should set this to `None`;
+    /// `prepare_export` will populate it.
+    #[deku(skip, default = "None")]
+    #[serde(skip, default)]
+    pub cached_body: Option<Vec<u8>>,
 }
 
 impl HIRCObject {
@@ -408,7 +451,33 @@ impl HIRCObject {
             size: 0,
             id,
             body,
+            cached_body: None,
         }
+    }
+}
+
+// Manual DekuWrite that uses the cached body bytes when available, otherwise
+// re-encodes the body the same way the derived impl would.
+impl DekuWrite<()> for HIRCObject {
+    fn write(&self, output: &mut BitVec<u8, Msb0>, _: ()) -> Result<(), DekuError> {
+        self.body_type.write(output, ())?;
+        self.size.write(output, ())?;
+        ObjectId::write(output, &self.id)?;
+        if let Some(bytes) = &self.cached_body {
+            output.extend_from_bitslice(bytes.view_bits::<Msb0>());
+            Ok(())
+        } else {
+            self.body.write(output, (self.body_type, self.size))
+        }
+    }
+}
+
+// Manual DekuUpdate equivalent to the one the derive macro would produce.
+impl DekuUpdate for HIRCObject {
+    fn update(&mut self) -> Result<(), DekuError> {
+        self.body_type = self.body.deku_id().unwrap();
+        self.body.update()?;
+        Ok(())
     }
 }
 
