@@ -226,37 +226,49 @@ pub fn read_soundbank(db_path: &Path) -> Result<Soundbank> {
 }
 
 fn load_hirc_section(conn: &Connection, section_ord: usize) -> Result<HIRCSection> {
+    use rayon::prelude::*;
+
+    // SELECT all rows first, then parallelize the per-row JSON parse. The
+    // parse dominates load time (≈75% on a 30k-object bank), and serde_json
+    // is thread-safe so this scales well across cores.
     let mut stmt = conn.prepare(
         "SELECT id_kind, id_value, body_json
          FROM hirc_objects
          WHERE section_ord = ?
          ORDER BY ord ASC",
     )?;
-    let rows = stmt.query_map(params![section_ord as i64], |row| {
-        Ok((
-            row.get::<_, String>(0)?,
-            row.get::<_, String>(1)?,
-            row.get::<_, String>(2)?,
-        ))
-    })?;
-    let mut objects = Vec::new();
-    for row in rows {
-        let (id_kind, id_value, body_json) = row?;
-        let id = match id_kind.as_str() {
-            "String" => ObjectId::String(id_value),
-            "Hash" => ObjectId::Hash(
-                id_value.parse::<u32>().map_err(|_| StorageError::BadHash(id_value))?,
-            ),
-            other => return Err(StorageError::InvalidIdKind(other.to_string())),
-        };
-        let body: HIRCObjectBody = serde_json::from_str(&body_json)?;
-        objects.push(HIRCObject {
-            body_type: body.deku_id()?,
-            size: 0,
-            id,
-            body,
-        });
-    }
+    let raw: Vec<(String, String, String)> = stmt
+        .query_map(params![section_ord as i64], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+            ))
+        })?
+        .collect::<rusqlite::Result<Vec<_>>>()?;
+
+    let objects: Vec<HIRCObject> = raw
+        .into_par_iter()
+        .map(|(id_kind, id_value, body_json)| -> Result<HIRCObject> {
+            let id = match id_kind.as_str() {
+                "String" => ObjectId::String(id_value),
+                "Hash" => ObjectId::Hash(
+                    id_value
+                        .parse::<u32>()
+                        .map_err(|_| StorageError::BadHash(id_value))?,
+                ),
+                other => return Err(StorageError::InvalidIdKind(other.to_string())),
+            };
+            let body: HIRCObjectBody = serde_json::from_str(&body_json)?;
+            Ok(HIRCObject {
+                body_type: body.deku_id()?,
+                size: 0,
+                id,
+                body,
+            })
+        })
+        .collect::<Result<Vec<_>>>()?;
+
     Ok(HIRCSection::from_objects(objects))
 }
 
@@ -394,6 +406,16 @@ pub fn export_bnk(db_path: &Path, bnk_path: &Path) -> Result<()> {
     soundbank.write(&mut bits, ())?;
     fs::write(bnk_path, bits.as_raw_slice())?;
     Ok(())
+}
+
+/// Test-only re-export so the bench binary can call the otherwise-private
+/// `rebuild_didx_data` directly to time it in isolation.
+#[doc(hidden)]
+pub fn rebuild_didx_data_for_bench(
+    sb: &mut Soundbank,
+    wems: Vec<(u32, Vec<u8>)>,
+) -> Result<()> {
+    rebuild_didx_data(sb, wems)
 }
 
 /// Mirrors the descriptor/data assembly in `format/src/bin/bnk2json.rs`.

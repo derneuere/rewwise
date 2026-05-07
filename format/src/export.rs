@@ -167,9 +167,15 @@ fn sample_section_body_size(s: &Section) -> Result<u32, deku::DekuError> {
 
 impl PrepareExport for HIRCSection {
     fn prepare_export(&mut self) -> Result<(), PrepareExportError> {
-        for object in self.objects.iter_mut() {
-            object.prepare_export()?;
-        }
+        // Each HIRCObject's prepare_export is independent — it walks its own
+        // body, computes its own size via a Deku encode-to-measure, and only
+        // mutates `self.size` and `self.body_type`. Running this in parallel
+        // is the lion's share of the export-side speedup on banks with
+        // tens of thousands of HIRC objects.
+        use rayon::prelude::*;
+        self.objects
+            .par_iter_mut()
+            .try_for_each(|o| o.prepare_export())?;
         self.update().map_err(PrepareExportError::Deku)?;
         Ok(())
     }

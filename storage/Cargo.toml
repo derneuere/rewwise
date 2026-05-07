@@ -17,3 +17,4 @@ serde_json = { workspace = true }
 rusqlite = { workspace = true }
 thiserror = { workspace = true }
 deku = "0.16"
+rayon = "1"
