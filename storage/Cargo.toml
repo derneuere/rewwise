@@ -1,0 +1,19 @@
+[package]
+name = "wwise_storage"
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+license.workspace = true
+readme = false
+
+[[bin]]
+name = "bnk2sqlite"
+path = "src/bin/bnk2sqlite.rs"
+
+[dependencies]
+wwise_format = { path = "../format" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+rusqlite = { workspace = true }
+thiserror = { workspace = true }
+deku = "0.16"
