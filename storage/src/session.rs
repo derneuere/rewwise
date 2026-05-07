@@ -337,6 +337,7 @@ impl SoundbankSession {
                 size: 0,
                 id,
                 body,
+                cached_body: None,
             });
         }
 
