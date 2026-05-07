@@ -224,7 +224,7 @@ dependencies = [
 
 [[package]]
 name = "bnk_edit"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -2319,7 +2319,7 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "viewer"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -2696,14 +2696,14 @@ checksum = "1ffae5123b2d3fc086436f8834ae3ab053a283cfac8fe0a0b8eaae044768a4c4"
 
 [[package]]
 name = "wwise_analysis"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "wwise_format",
 ]
 
 [[package]]
 name = "wwise_format"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "base64 0.21.7",
  "clap",
@@ -2715,7 +2715,7 @@ dependencies = [
 
 [[package]]
 name = "wwise_storage"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "deku",
  "rusqlite",
@@ -2727,7 +2727,7 @@ dependencies = [
 
 [[package]]
 name = "wwise_util"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "clap",
  "tabbycat",
