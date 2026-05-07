@@ -1,0 +1,31 @@
+[package]
+name = "viewer"
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+license.workspace = true
+readme = false
+
+[[bin]]
+name = "bnk-viewer"
+path = "src/main.rs"
+
+[dependencies]
+wwise_format = { path = "../format" }
+wwise_storage = { path = "../storage" }
+
+# Web stack
+axum = "0.7"
+tokio = { version = "1", features = ["full"] }
+tower-http = { version = "0.5", features = ["trace"] }
+leptos = { version = "0.6", features = ["ssr"] }
+
+# Misc
+serde = { workspace = true }
+serde_json = { workspace = true }
+clap = { workspace = true }
+anyhow = { workspace = true }
+
+[[example]]
+name = "smoke"
+path = "examples/smoke.rs"

@@ -1,0 +1,410 @@
+/* Voice: calm, clinical, terminal-density. No glow, no gradients, no
+ * "primary CTA" buttons. Single dim accent reserved for focus + brand mark. */
+
+:root {
+  --bg:        #0f0f10;     /* page */
+  --surface:   #18181a;     /* cards, code blocks, table hover */
+  --border:    #232326;
+  --border-2:  #2c2c30;     /* slightly stronger for inputs */
+
+  --fg:        #d6d4d0;     /* primary text */
+  --fg-2:      #82817d;     /* secondary / labels / muted */
+  --fg-3:      #5a5a58;     /* tertiary / placeholders / disabled */
+
+  --link:      #8aa9c9;
+  --link-hi:   #b1c5dc;
+
+  --accent:    #c89461;     /* used sparingly: focus rings, brand */
+
+  --warn:      #c87d5e;
+}
+
+* { box-sizing: border-box; }
+
+html { font-size: 13px; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+body {
+  font-family: ui-monospace, "SF Mono", Consolas, "Liberation Mono", monospace;
+  line-height: 1.45;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- structure ----------------------------------------------------------- */
+
+header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.85rem;
+  padding: 0.55rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+header .brand {
+  color: var(--fg);
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+header .brand:hover { color: var(--accent); }
+
+header .sep {
+  color: var(--fg-3);
+  user-select: none;
+}
+
+header .bank-path {
+  color: var(--fg);
+}
+
+header .bank-stats {
+  color: var(--fg-2);
+  margin-left: auto;
+  font-size: 0.92em;
+}
+
+main {
+  padding: 1rem 1rem 3rem;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* --- typography ---------------------------------------------------------- */
+
+h1, h2, h3 { font-weight: 500; }
+
+h2 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-2);
+  margin: 1.4rem 0 0.5rem;
+  font-weight: 500;
+}
+
+a { color: var(--link); text-decoration: none; }
+a:hover { color: var(--link-hi); text-decoration: underline; text-underline-offset: 2px; }
+
+code {
+  background: var(--surface);
+  padding: 0 0.3rem;
+  border-radius: 2px;
+  font-size: 0.94em;
+  color: var(--fg);
+}
+
+pre {
+  background: var(--surface);
+  color: var(--fg);
+  padding: 0.75rem 0.9rem;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: auto;
+  font-size: 0.92em;
+  line-height: 1.5;
+  max-height: 60vh;
+}
+
+.muted   { color: var(--fg-2); }
+.dim     { color: var(--fg-3); }
+
+/* --- form ---------------------------------------------------------------- */
+
+form {
+  display: flex;
+  gap: 0.4rem;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+label {
+  color: var(--fg-2);
+  font-size: 0.85rem;
+  align-self: center;
+}
+
+input, select {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border-2);
+  padding: 0.32rem 0.55rem;
+  border-radius: 2px;
+  font: inherit;
+  font-size: 0.95em;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+input::placeholder { color: var(--fg-3); }
+
+input[type=text], input:not([type]) { min-width: 260px; flex: 1; }
+
+button {
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--border-2);
+  padding: 0.32rem 0.85rem;
+  border-radius: 2px;
+  font: inherit;
+  font-size: 0.95em;
+  cursor: pointer;
+}
+
+button:hover { border-color: var(--accent); color: var(--accent); }
+
+/* --- breadcrumb ---------------------------------------------------------- */
+
+.crumb {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.92rem;
+  color: var(--fg-2);
+}
+
+.crumb a { color: var(--link); }
+
+.crumb .sep { color: var(--fg-3); }
+
+/* --- meta block ---------------------------------------------------------- */
+
+.meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.15rem 0.75rem;
+  font-size: 0.95em;
+  margin: 0.25rem 0 1rem;
+}
+
+.meta dt {
+  color: var(--fg-2);
+  text-transform: lowercase;
+}
+
+.meta dd { margin: 0; }
+
+/* --- table --------------------------------------------------------------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.22rem 0.55rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+th {
+  color: var(--fg-2);
+  font-weight: 500;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 1px solid var(--border-2);
+  padding: 0.35rem 0.55rem;
+}
+
+tbody tr:hover td { background: var(--surface); }
+
+td.kind  { color: var(--fg-2); font-size: 0.9em; }
+td.id    { color: var(--fg-2); font-variant-numeric: tabular-nums; }
+td.label { white-space: normal; word-break: break-word; }
+
+/* --- result count line --------------------------------------------------- */
+
+.count-line {
+  margin: 0.6rem 0;
+  color: var(--fg-2);
+  font-size: 0.9em;
+}
+
+.count-line strong { color: var(--fg); font-weight: 500; }
+
+.count-line .truncated { color: var(--warn); margin-left: 0.4rem; }
+
+/* --- references (compact) ----------------------------------------------- */
+
+.refs td.kind  { width: 1%; }
+.refs td.id    { width: 1%; }
+
+/* --- details / payload --------------------------------------------------- */
+
+details {
+  margin: 0.5rem 0;
+}
+
+details > summary {
+  cursor: pointer;
+  list-style: none;
+  color: var(--fg-2);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.25rem 0;
+  user-select: none;
+}
+
+details > summary::-webkit-details-marker { display: none; }
+details > summary::before { content: "▸ "; color: var(--fg-3); }
+details[open] > summary::before { content: "▾ "; }
+
+details > summary:hover { color: var(--fg); }
+
+/* --- add-child form ------------------------------------------------------ */
+
+.add-child {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+
+.add-child .row { display: flex; gap: 0.4rem; align-items: stretch; flex-wrap: wrap; }
+
+.add-child .help { color: var(--fg-2); font-size: 0.85em; margin: 0 0 0.5rem; }
+
+/* --- empty state --------------------------------------------------------- */
+
+.empty {
+  color: var(--fg-2);
+  padding: 1.2rem 0;
+  font-size: 0.95em;
+}
+
+/* --- body editor --------------------------------------------------------- */
+
+textarea.body-edit {
+  width: 100%;
+  min-height: 24rem;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border-2);
+  border-radius: 3px;
+  padding: 0.75rem 0.9rem;
+  font: inherit;
+  font-size: 0.92em;
+  line-height: 1.5;
+  resize: vertical;
+  white-space: pre;
+  tab-size: 2;
+}
+
+textarea.body-edit:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.body-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0;
+}
+
+.body-edit-form .toolbar {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.body-edit-form .row {
+  display: flex;
+  gap: 0.4rem;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+.body-edit-form .row input[type=text] {
+  flex: 1;
+  min-width: 240px;
+}
+
+.renumber-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--fg-2);
+  font-size: 0.9em;
+}
+
+.renumber-row code { font-size: 0.95em; }
+
+.body-edit-form .help em {
+  color: var(--fg);
+  font-style: normal;
+  background: var(--bg);
+  padding: 0 0.25rem;
+  border-radius: 2px;
+}
+
+.body-edit-form .toolbar .help {
+  margin-right: auto;
+  align-self: center;
+  color: var(--fg-2);
+  font-size: 0.85em;
+}
+
+.error {
+  background: rgba(200, 125, 94, 0.08);
+  color: var(--warn);
+  border: 1px solid rgba(200, 125, 94, 0.35);
+  padding: 0.55rem 0.7rem;
+  border-radius: 3px;
+  font-size: 0.92em;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* --- inline child remove button ----------------------------------------- */
+
+.refs td.action {
+  width: 1%;
+  padding-right: 0.25rem;
+}
+
+button.icon {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--fg-3);
+  padding: 0 0.45rem;
+  font-size: 0.95em;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+button.icon:hover {
+  color: var(--warn);
+  border-color: var(--border-2);
+}
+
+form.inline {
+  display: inline;
+  margin: 0;
+  padding: 0;
+}
