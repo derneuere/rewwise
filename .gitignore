@@ -1,2 +1,5 @@
 target/
 samples/
+/.claude/
+/smoke.db
+/smoke.db-*
